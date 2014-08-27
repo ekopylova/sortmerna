@@ -77,7 +77,7 @@ struct seq_pos
 struct kmer_origin
 {
 	seq_pos* arr; // pointer to seq_pos array
-	uint32_t size; // number of 19-mer occurrences
+	int32_t size; // number of 19-mer occurrences
 };
 
 struct kmer

@@ -1156,20 +1156,28 @@ load_index( char* ptr_dbindex,
     
   for ( uint32_t i = 0; i < number_elements; i++ )
   {
-    /* the number of positions */
-    inreff.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));
+    // the number of positions
+    inreff.read(reinterpret_cast<char*>(&size), sizeof(int32_t));
     positions_tbl[i].size = size;
-        
-    /* the sequence seq_pos array */
-    positions_tbl[i].arr = new seq_pos[size]();
-        
-    if ( positions_tbl[i].arr == NULL )
+       
+    // k-mer too abundant for positions to be stored 
+    if (size == -1)
     {
-      fprintf(stderr, "  ERROR: could not allocate memory for positions_tbl (paralleltraversal.cpp)\n");
-      exit(EXIT_FAILURE);
+      positions_tbl[i].arr == NULL;
     }
-        
-    inreff.read(reinterpret_cast<char*>(positions_tbl[i].arr), sizeof(seq_pos)*size);
+    else
+    {
+      // the sequence seq_pos array
+      positions_tbl[i].arr = new seq_pos[size]();
+          
+      if ( positions_tbl[i].arr == NULL )
+      {
+        fprintf(stderr, "  ERROR: could not allocate memory for positions_tbl (paralleltraversal.cpp)\n");
+        exit(EXIT_FAILURE);
+      }
+          
+      inreff.read(reinterpret_cast<char*>(positions_tbl[i].arr), sizeof(seq_pos)*size);
+    }
   }
     
   inreff.close();
@@ -2645,18 +2653,18 @@ paralleltraversal ( char* inputreads,
                       uint32_t _id = id_win_hits[i].id;
                                                                                         
                       // number of entries in the positions table for this id
-                      uint32_t num_hits = positions_tbl[_id].size;
+                      int32_t num_hits = positions_tbl[_id].size;
                                             
                       // pointer to the seq_pos array in the positions table for this id
                       seq_pos* positions_tbl_ptr = positions_tbl[_id].arr;
                                             
                       // loop through every position of id
-                      for ( uint32_t j = 0; j < num_hits; j++ )
+                      for ( int32_t j = 0; j < num_hits; j++ )
                       {
                         uint32_t seq = positions_tbl_ptr++->seq;
                         
                         // sequence already exists in the map, increment it's value
-                        if ( (map_it=most_frequent_seq_t.find(seq)) != most_frequent_seq_t.end() )
+                        if ( (map_it = most_frequent_seq_t.find(seq)) != most_frequent_seq_t.end() )
                           map_it->second++;
                         // sequence doesn't exist, add it
                         else most_frequent_seq_t[seq] = 1;
