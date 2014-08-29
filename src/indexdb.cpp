@@ -50,34 +50,62 @@
 	A/a -> 0, C/c -> 1, G/g -> 2, T/t -> 3, U/u -> 3
 	R/r -> 0, Y/y -> 1, S/s -> 2, W/w -> 1, K/k -> 2
 	M/m -> 0, B/b -> 1, D/d -> 0, H/h -> 0, V/v -> 0
-	N/n -> 0	 */
-const char map_nt[122] = {
-	/* 0,   1,   2,   3,   4,   5,   6,   7,   8,   9   */
+	N/n -> 0	*/
+char map_nt[122] = {
+	// 0,   1,   2,   3,   4,   5,   6,   7,   8,   9   
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-	/* 10,  11,  12,  13,  14,  15,  16,  17,  18,  19  */
+	// 10,  11,  12,  13,  14,  15,  16,  17,  18,  19  
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-	/* 20,  21,  22,  23,  24,  25,  26,  27,  28,  29  */
+	// 20,  21,  22,  23,  24,  25,  26,  27,  28,  29  
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-	/* 30,  31,  32,  33,  34,  35,  36,  37,  38,  39  */
+	// 30,  31,  32,  33,  34,  35,  36,  37,  38,  39 
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-	/* 40,  41,  42,  43,  44,  45,  46,  47,  48,  49  */
+	// 40,  41,  42,  43,  44,  45,  46,  47,  48,  49  
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-	/* 50,  51,  52,  53,  54,  55,  56,  57,  58,  59  */
+	// 50,  51,  52,  53,  54,  55,  56,  57,  58,  59  
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-	/* 60,  61,  62,  63,  64,  65,  66,  67,  68,  69  */
+	// 60,  61,  62,  63,  64,  65,  66,  67,  68,  69  
     0,   0,   0,   0,   0,   0,   1,   1,   1,   0,
-	/* 70,  71,  72,  73,  74,  75,  76,  77,  78,  79  */
+	// 70,  71,  72,  73,  74,  75,  76,  77,  78,  79 
     0,   2,   0,   0,   0,   2,   0,   0,   0,   0,
-	/* 80,  81,  82,  83,  84,  85,  86,  87,  88,  89  */
+	// 80,  81,  82,  83,  84,  85,  86,  87,  88,  89 
     0,   0,   0,   2,   3,   3,   0,   1,   2,   1,
-	/* 90,  91,  92,  93,  94,  95,  96,  97,  98,  99  */
+	// 90,  91,  92,  93,  94,  95,  96,  97,  98,  99 
     0,   0,   0,   0,   0,   0,   0,   0,   1,   1,
-	/* 100, 101, 102, 103, 104, 105, 106, 107, 108, 109 */
+	// 100, 101, 102, 103, 104, 105, 106, 107, 108, 109
     0,   0,   0,   2,   0,   0,   0,   2,   0,   0,
-	/* 110, 111, 112, 113, 114, 115, 116, 117, 118, 119 */
+	// 110, 111, 112, 113, 114, 115, 116, 117, 118, 119 
     0,   0,   0,   0,   0,   2,   3,   3,   0,   1,
-	/* 120, 121 */
+	// 120, 121 
     2,   1};
+
+char map_nt_mask_N[122] = {
+  /* 0,   1,   2,   3,   4,   5,   6,   7,   8,   9   */
+    5,   5,   5,   5,   5,   5,   5,   5,   5,   5,
+  /* 10,  11,  12,  13,  14,  15,  16,  17,  18,  19  */
+    5,   5,   5,   5,   5,   5,   5,   5,   5,   5,
+  /* 20,  21,  22,  23,  24,  25,  26,  27,  28,  29  */
+    5,   5,   5,   5,   5,   5,   5,   5,   5,   5,
+  /* 30,  31,  32,  33,  34,  35,  36,  37,  38,  39  */
+    5,   5,   5,   5,   5,   5,   5,   5,   5,   5,
+  /* 40,  41,  42,  43,  44,  45,  46,  47,  48,  49  */
+    5,   5,   5,   5,   5,   5,   5,   5,   5,   5,
+  /* 50,  51,  52,  53,  54,  55,  56,  57,  58,  59  */
+    5,   5,   5,   5,   5,   5,   5,   5,   5,   5,
+  /* 60,  61,  62,  63,  64,  65,  66,  67,  68,  69  */
+    5,   5,   5,   5,   5,   0,   5,   1,   5,   5,
+  /* 70,  71,  72,  73,  74,  75,  76,  77,  78,  79  */
+    5,   2,   5,   5,   5,   5,   5,   5,   5,   5,
+  /* 80,  81,  82,  83,  84,  85,  86,  87,  88,  89  */
+    5,   5,   5,   5,   3,   3,   5,   5,   5,   5,
+  /* 90,  91,  92,  93,  94,  95,  96,  97,  98,  99  */
+    5,   5,   5,   5,   5,   5,   5,   0,   5,   1,
+  /* 100, 101, 102, 103, 104, 105, 106, 107, 108, 109 */
+    5,   5,   5,   2,   5,   5,   5,   5,   5,   5,
+  /* 110, 111, 112, 113, 114, 115, 116, 117, 118, 119 */
+    5,   5,   5,   5,   5,   5,   3,   3,   5,   5,
+  /* 120, 121 */
+    5,   5};
 
 
 /* length of the sliding window parameters */
@@ -128,12 +156,12 @@ inline double mean(vector<uint32_t>& counts)
 }
 
 
-/*! @function stddev()
-    @brief compute the standard deviation using a vector of integers
+/*! @function variance()
+    @brief compute the variance using a vector of integers
     and their mean
-    @return double, standard deviation
+    @return double, variance
 */
-inline double stddev(vector<uint32_t>& counts, double mean)
+inline double variance(vector<uint32_t>& counts, double mean)
 {
   uint32_t size = counts.size();
   if (size == 0)
@@ -147,8 +175,52 @@ inline double stddev(vector<uint32_t>& counts, double mean)
   {
     sum += pow(static_cast<double>(counts[i]) - mean, 2);
   }
-  double stddev = sqrt(sum * inverse);
-  return stddev;
+  //double stddev = sqrt(sum * inverse);
+  double variance = sum * inverse;
+  return variance;
+}
+
+/*! @function location_param()
+    @brief compute the location parameter (mu) using the normal
+    mean and variance values
+    @return double, mu
+*/
+inline double location_param(double mean, double variance)
+{
+  double mean_sqr = pow(mean,2);
+  double mu = log(mean_sqr/sqrt(variance+mean_sqr));
+  return mu;
+}
+
+/*! @function scale_param()
+    @brief compute the scale parameter (mu) using the normal
+    mean and variance values
+    @return double, sigma
+*/
+inline double scale_param(double mean, double variance)
+{
+  double sigma_sqr = log(1+(variance/pow(mean,2)));
+  return sigma_sqr;
+}
+
+/*! @function lognormal_mean()
+    @brief compute the lognormal mean using mu and sigma^2
+    @return double, l_mean
+*/
+inline double lognormal_mean(double mu, double sigma_sqr)
+{
+  double l_mean = exp(mu + sigma_sqr/2);
+  return l_mean;
+}
+
+/*! @function lognormal_variance()
+    @brief compute the lognormal variance using mu and sigma^2
+    @return double, l_variance
+*/
+inline double lognormal_variance(double mu, double sigma_sqr)
+{
+  double l_variance = (exp(sigma_sqr)-1)*exp(2*mu + sigma_sqr);
+  return l_variance;
 }
 
 
@@ -971,6 +1043,8 @@ void printlist()
   printf("     %s--interval%s      %sINT%s             index every INT L-mer in the reference database             %s1%s\n","\033[1m","\033[0m","\033[4m","\033[0m","\033[4m","\033[0m");
   #endif
   printf("     %s--max_pos%s       %sINT%s             maximum number of positions to store for each unique L-mer  %s10000%s\n","\033[1m","\033[0m","\033[4m","\033[0m","\033[4m","\033[0m");
+  printf("     %s--mask_N%s        %sFLAG%s            do not include k-mers having an ambiguous nucleotide        %soff%s\n","\033[1m","\033[0m","\033[4m","\033[0m","\033[4m","\033[0m");
+  printf("                                             in the index\n");
   printf("                                      (setting --max_pos 0 will store all positions)\n");
 	printf("     %s-v%s              %sFLAG%s            verbose\n","\033[1m","\033[0m","\033[4m","\033[0m");
 	printf("     %s-h%s              %sFLAG%s            help	\n\n","\033[1m","\033[0m","\033[4m","\033[0m");
@@ -1008,6 +1082,9 @@ int main (int argc, char** argv)
   char* ptr_tmpdir = NULL;
   uint32_t interval = 0;
   uint32_t max_pos = 0;
+  bool mask_N = false;
+  bool mask_N_set = false;
+  char *map_ptr = NULL;
     
 	timeval t;
     
@@ -1221,6 +1298,18 @@ int main (int argc, char** argv)
 					sensitive_set = true;
 					narg++;
 				}
+        else if ( strcmp ( myoption, "mask_N") == 0 )
+        {
+          if ( mask_N_set )
+          {
+            fprintf(stderr,"\n  %sERROR%s: --mask_N has already been "
+                           "set once.\n\n","\033[0;31m","\033[0m");
+            exit(EXIT_FAILURE);
+          }
+          mask_N_set = true;
+          mask_N = true;
+          narg++;
+        }
         // Interval for constructing index on every INT words
         else if ( strcmp ( myoption, "interval" ) == 0 )
         {
@@ -1427,6 +1516,9 @@ int main (int argc, char** argv)
   if ( !interval_set ) interval = 1;
   // set the default max_pos, store maximum 10000 positions for each L-mer
   if ( !max_pos_set ) max_pos = 10000;
+  // set the nucleotide to integer encode matrix
+  if ( mask_N ) map_ptr = map_nt_mask_N;
+  else map_ptr = map_nt;
     
 	pread_gv = lnwin_gv+1;
 	partialwin_gv = lnwin_gv/2;
@@ -1548,6 +1640,10 @@ int main (int argc, char** argv)
     eprintf("    Maximum positions to store per unique K-mer: all\n");
   else
     eprintf("    Maximum positions to store per unique K-mer: %d\n", max_pos);
+  if (mask_N)
+    eprintf("    Include k-mers with ambiguous nucleotides in index\n");
+  else
+    eprintf("    Do not include k-mers with ambiguous nucleotides in index\n");
   
   eprintf("\n  Total number of databases to index: %d\n", (int)myfiles.size());
     
@@ -1640,7 +1736,11 @@ int main (int argc, char** argv)
         if ( nt != '\n' && nt != ' ' )
         {
           len++;
-          if ( nt != 'N' ) background_freq[(int)map_nt[nt]]++;
+          if ( nt == 'A' || nt == 'a' ||
+               nt == 'C' || nt == 'c' ||
+               nt == 'G' || nt == 'g' ||
+               nt == 'T' || nt == 't' ||
+               nt == 'U' || nt == 'u') background_freq[(int)*(map_ptr+nt)]++;
         }
         nt = fgetc(fp);
       }
@@ -1752,7 +1852,16 @@ int main (int argc, char** argv)
         nt = fgetc(fp);
         
         // scan to end of header name
-        while ( nt != '\n' ) nt = fgetc(fp);
+        char header[1000] = " "; //tmp
+        char* h_pt = header;
+        while ( nt != '\n' )
+        { 
+          nt = fgetc(fp);
+          *h_pt++ = nt; //tmp
+        }
+        *h_pt = '\n'; //tmp
+
+        //cout << header; //tmp
         
         unsigned char* myseq = new unsigned char[maxlen];
         unsigned char* myseqr = new unsigned char[maxlen];
@@ -1768,11 +1877,11 @@ int main (int argc, char** argv)
           {
             len++;
             // exact character
-            myseq[_j++] = map_nt[nt];
+            myseq[_j++] = *(map_ptr+nt);
           }
           nt = fgetc(fp);
         }
-            
+
         // end of current sequence in file
         if ( nt != EOF ) ungetc(nt,fp);
         
@@ -1843,6 +1952,9 @@ int main (int argc, char** argv)
         unsigned long long int kmer_key = 0;
         // pointer to 19-mer
         unsigned char* kmer_key_ptr = &myseq[0];
+
+        bool skip_kmer = false; //new
+        uint32_t skip_kmer_pos = 0; //new
           
         // initialize the prefix and suffix 9-mers
         for ( uint32_t j = 0; j < partialwin_gv; j++ )
@@ -1852,7 +1964,19 @@ int main (int argc, char** argv)
         }
             
         // initialize the 19-mer
-        for ( uint32_t j = 0; j < pread_gv; j++ ) (kmer_key <<= 2) |= (int)*kmer_key_ptr++;
+        for ( uint32_t j = 0; j < pread_gv; j++ )
+        {
+          // skip k-mers with ambiguous nucleotides
+          if ( mask_N )
+          {
+            if ( (int)*kmer_key_ptr == 5 )
+            {
+              skip_kmer = true;
+              skip_kmer_pos = j;
+            }
+          }
+          (kmer_key <<= 2) |= (int)*kmer_key_ptr++;
+        } 
         
         uint32_t numwin = (len-pread_gv+interval)/interval; //TESTING
         uint32_t index_pos = 0;
@@ -1860,72 +1984,79 @@ int main (int argc, char** argv)
         // for all 19-mers on the sequence
         for ( uint32_t j = 0; j < numwin; j++ ) //TESTING
         {
-          lookup_table[kmer_key_short_f].count++;
-          incremented_by_forward[kmer_key_short_f] = true;
-          // increment 9-mer count only if it wasn't already
-          // incremented by kmer_key_short_f before
-          if ( !incremented_by_forward[kmer_key_short_r] ) lookup_table[kmer_key_short_r].count++;
-          
-          // ****** add the forward 19-mer
-          
-          // new position for 18-mer in positions_tbl
-          bool new_position = true;
-          
-          // forward 19-mer does not exist in the burst trie (duplicates not allowed)
-          if ( lookup_table[kmer_key_short_f].trie_F == NULL ||
-              ( (lookup_table[kmer_key_short_f].trie_F != NULL) && !search_burst_trie( lookup_table[kmer_key_short_f].trie_F, kmer_key_short_f_p, new_position ) ) )
+          // no ambiguous nucleotides in the k-mer (will only be true if mask_N is set)
+          if ( !skip_kmer )
           {
-            // create a trie node if it doesn't exist
-            if ( lookup_table[kmer_key_short_f].trie_F == NULL )
+            lookup_table[kmer_key_short_f].count++;
+            incremented_by_forward[kmer_key_short_f] = true;
+            // increment 9-mer count only if it wasn't already
+            // incremented by kmer_key_short_f before
+            if ( !incremented_by_forward[kmer_key_short_r] ) lookup_table[kmer_key_short_r].count++;
+            
+            // ****** add the forward 19-mer
+            
+            // new position for 18-mer in positions_tbl
+            bool new_position = true;
+            
+            // forward 19-mer does not exist in the burst trie (duplicates not allowed)
+            if ( lookup_table[kmer_key_short_f].trie_F == NULL ||
+                ( (lookup_table[kmer_key_short_f].trie_F != NULL) && !search_burst_trie( lookup_table[kmer_key_short_f].trie_F, kmer_key_short_f_p, new_position ) ) )
             {
-              lookup_table[kmer_key_short_f].trie_F = (NodeElement*)malloc(4*sizeof(NodeElement));
+              // create a trie node if it doesn't exist
               if ( lookup_table[kmer_key_short_f].trie_F == NULL )
               {
-                fprintf(stderr,"  %sERROR%s: could not allocate memory for trie_node in indexdb.cpp\n","\033[0;31m","\033[0m");
-                exit(EXIT_FAILURE);
+                lookup_table[kmer_key_short_f].trie_F = (NodeElement*)malloc(4*sizeof(NodeElement));
+                if ( lookup_table[kmer_key_short_f].trie_F == NULL )
+                {
+                  fprintf(stderr,"  %sERROR%s: could not allocate memory for trie_node in indexdb.cpp\n","\033[0;31m","\033[0m");
+                  exit(EXIT_FAILURE);
+                }
+                memset(lookup_table[kmer_key_short_f].trie_F, 0, 4*sizeof(NodeElement));
               }
-              memset(lookup_table[kmer_key_short_f].trie_F, 0, 4*sizeof(NodeElement));
+              insert_prefix( lookup_table[kmer_key_short_f].trie_F, kmer_key_short_f_p );
             }
-            insert_prefix( lookup_table[kmer_key_short_f].trie_F, kmer_key_short_f_p );
-          }
-                    
-          // 18-mer doesn't exist in the burst trie, add it to keys file
-          if ( new_position )
-          {
-            // increment number of unique 18-mers
-            number_elements++;
-            fprintf(keys,"%llu\n",(kmer_key>>2));
-            // add new 18-mer to kmer_count
-            kmer_count.insert(pair<unsigned long long int, uint32_t>(kmer_key>>2, 1));
-          }
-          else
-          {
-            // incremember 18-mer count
-            kmer_count[(kmer_key>>2)]++;
-          }
-  
-          // ****** add the reverse 19-mer
-          new_position = true;
-          
-          // reverse 19-mer does not exist in the burst trie
-          if ( lookup_table[kmer_key_short_r].trie_R == NULL ||
-              ( (lookup_table[kmer_key_short_r].trie_R != NULL) && !search_burst_trie( lookup_table[kmer_key_short_r].trie_R, kmer_key_short_r_rp, new_position ) ) )
-          {
-            // create a trie node if it doesn't exist
-            if ( lookup_table[kmer_key_short_r].trie_R == NULL )
+
+            // 18-mer doesn't exist in the burst trie, add it to keys file
+            if ( new_position )
             {
-              lookup_table[kmer_key_short_r].trie_R = (NodeElement*)malloc(4*sizeof(NodeElement));
+              // increment number of unique 18-mers
+              number_elements++;
+              fprintf(keys,"%llu\n",(kmer_key>>2));
+              // add new 18-mer to kmer_count
+              kmer_count.insert(pair<unsigned long long int, uint32_t>(kmer_key>>2, 1));
+
+              //if ((kmer_key>>2) == 66091079) cout << header << "\tpos = " << j << endl; //tmp
+            }
+            else
+            {
+              // incremember 18-mer count
+              kmer_count[(kmer_key>>2)]++;
+
+              //if ((kmer_key>>2) == 66091079) cout << header << "\tpos = " << j << endl; //tmp
+            }
+    
+            // ****** add the reverse 19-mer
+            new_position = true;
+            
+            // reverse 19-mer does not exist in the burst trie
+            if ( lookup_table[kmer_key_short_r].trie_R == NULL ||
+                ( (lookup_table[kmer_key_short_r].trie_R != NULL) && !search_burst_trie( lookup_table[kmer_key_short_r].trie_R, kmer_key_short_r_rp, new_position ) ) )
+            {
+              // create a trie node if it doesn't exist
               if ( lookup_table[kmer_key_short_r].trie_R == NULL )
               {
-                fprintf(stderr,"  %sERROR%s: could not allocate memory for trie_node in indexdb.cpp\n","\033[0;31m","\033[0m");
-                exit(EXIT_FAILURE);
+                lookup_table[kmer_key_short_r].trie_R = (NodeElement*)malloc(4*sizeof(NodeElement));
+                if ( lookup_table[kmer_key_short_r].trie_R == NULL )
+                {
+                  fprintf(stderr,"  %sERROR%s: could not allocate memory for trie_node in indexdb.cpp\n","\033[0;31m","\033[0m");
+                  exit(EXIT_FAILURE);
+                }
+                memset(lookup_table[kmer_key_short_r].trie_R, 0, 4*sizeof(NodeElement));
               }
-              memset(lookup_table[kmer_key_short_r].trie_R, 0, 4*sizeof(NodeElement));
+              
+              insert_prefix( lookup_table[kmer_key_short_r].trie_R, kmer_key_short_r_rp );
             }
-            
-            insert_prefix( lookup_table[kmer_key_short_r].trie_R, kmer_key_short_r_rp );
-          }
-                
+          } 
           // shift 19-mer window and both 9-mers
           if ( j != numwin-1 )
           {
@@ -1933,9 +2064,26 @@ int main (int argc, char** argv)
             {
               (( kmer_key_short_f <<= 2 ) &= mask32 ) |= (int)*kmer_key_short_f_p++;
               (( kmer_key_short_r <<= 2 ) &= mask32 ) |= (int)*kmer_key_short_r_p++;
+
+              // skip k-mers with ambiguous nucleotides
+              if ( mask_N )
+              {
+                if ((int)*kmer_key_ptr == 5 )
+                {
+                  skip_kmer = true;
+                  skip_kmer_pos = j+pread_gv;
+                }
+              }
+
               (( kmer_key <<= 2 ) &= mask64 ) |= (int)*kmer_key_ptr++;
               kmer_key_short_r_rp--;
               index_pos++;
+            }
+
+            // skip k-mers with ambiguous nucleotides
+            if ( mask_N )
+            {
+              if ( skip_kmer && (j+1 > skip_kmer_pos) ) skip_kmer = false;
             }
           }
                   
@@ -1951,8 +2099,33 @@ int main (int argc, char** argv)
       vector<uint32_t> counts;
       //map<uint32_t,uint32_t> stats; //tmp
 
+      //cout << "k-mer\t# occurrences\n";
       for (it = kmer_count.begin(); it != kmer_count.end(); it++)
       {
+                        //0    1    2    3
+        //char decode[] = {'A', 'C', 'G', 'T'};
+        //unsigned long long mask_t = 18446744073709551612ULL;
+        //char forward[18] = " ";
+        //char *forward_p = forward;
+        //unsigned long long int kkmer = it->first;
+
+        //for (int i = 0; i < lnwin_gv; i++ )
+        //{
+        //  *forward_p++ = (char)decode[(kkmer & 3)];
+        //  kkmer>>=2;
+        //}
+
+        //forward_p--;
+
+        //cout << ">" << it->second << "\n";
+        //for (int i = 0; i < lnwin_gv; i++ )
+        //{
+        //  cout << (char)*forward_p--;
+        //}
+
+        //cout << "\n";
+
+        //cout << it->first << "\t" << it->second << endl; //tmp
         counts.push_back(it->second);
         //if (stats.find(it->second) == stats.end()) //tmp
         //  stats.insert(pair<uint32_t,uint32_t>(it->second,1)); //tmp
@@ -1961,18 +2134,32 @@ int main (int argc, char** argv)
       }
 
       double mean_c = mean(counts);
-      double stddev_c = stddev(counts, mean_c);
+      double variance_c = variance(counts, mean_c);
+      double stddev_c = sqrt(variance_c);
       uint32_t count_threshold = mean_c+(3*stddev_c);
 
       cout << "\nmean = " << mean_c << endl;
-      cout << "stddev = " << stddev_c << endl;
+      cout << "stddev = " << sqrt(variance_c) << endl;
       cout << "threshold = " << count_threshold << endl;
+
+      double mu = location_param(mean_c, variance_c);
+      cout << "mu = " << mu << endl;
+      double sigma_sqr = scale_param(mean_c, variance_c);
+      cout << "sigma_sqr = " << sigma_sqr << endl;
+      double mean_log = lognormal_mean(mu, sigma_sqr);
+      double variance_log = lognormal_variance(mu, sigma_sqr);
+      double stddev_log = sqrt(variance_log);
+
+      cout << "lognormal mean = " << mean_log << endl;
+      cout << "lognormal stddev = " << stddev_log << endl;
+      cout << "lognormal threshold = " << mean_log+(3*stddev_log) << endl;
+
 
       //map<uint32_t,uint32_t>::iterator it2; //tmp
       //cout << "# occurrences\t# k-mers\n"; //tmp
       //for (it2 = stats.begin(); it2 != stats.end(); it2++ ) //tmp
       //  cout << it2->first << "\t" << it2->second << endl; //tmp
-            
+    
       TIME(f);
       
       // no index can be created, all reference sequences are too large to
@@ -2071,7 +2258,7 @@ int main (int argc, char** argv)
           {
             len++;
             // exact character
-            myseq[_j++] = map_nt[nt];
+            myseq[_j++] = *(map_ptr+nt);
           }
           nt = fgetc(fp);
         }
@@ -2114,6 +2301,9 @@ int main (int argc, char** argv)
         
         unsigned long long int kmer_key = 0;
         unsigned char* kmer_key_ptr = &myseq[0];
+
+        bool skip_kmer = false;
+        uint32_t skip_kmer_pos = 0;
         
         // initialize the 9-mers
         for ( uint32_t j = 0; j < partialwin_gv; j++ )
@@ -2121,9 +2311,21 @@ int main (int argc, char** argv)
           (kmer_key_short_f <<= 2) |= (int)*kmer_key_short_f_p++;
           (kmer_key_short_r <<= 2) |= (int)*kmer_key_short_r_p++;
         }
-          
+
         // initialize the 19-mer
-        for ( uint32_t j = 0; j < pread_gv; j++ ) (kmer_key <<= 2) |= (int)*kmer_key_ptr++;
+        for ( uint32_t j = 0; j < pread_gv; j++ )
+        {
+          // skip k-mers with ambiguous nucleotides
+          if ( mask_N )
+          {
+            if ( (int)*kmer_key_ptr == 5 )
+            {
+              skip_kmer = true;
+              skip_kmer_pos = j;
+            }
+          }
+          (kmer_key <<= 2) |= (int)*kmer_key_ptr++;
+        } 
         
         uint32_t numwin = (len-pread_gv+interval)/interval; //TESTING
         uint32_t id = 0;
@@ -2133,20 +2335,24 @@ int main (int argc, char** argv)
         // for all 19-mers on the sequence
         for ( uint32_t j = 0; j < numwin; j++ ) //TESTING
         {
-          // character array to hold an unsigned long long integer for CMPH
-          char a[38] = {0};
-          sprintf(a,"%llu",(kmer_key>>2));
-          const char *key = a;
-          id = cmph_search(hash, key, (cmph_uint32)strlen(key));
-          
-          add_id_to_burst_trie( lookup_table[kmer_key_short_f].trie_F, kmer_key_short_f_p, id );
-          add_id_to_burst_trie( lookup_table[kmer_key_short_r].trie_R, kmer_key_short_r_rp, id );
-          
-          // if # of k-mer occurrences exceeds threshold, do not record its positions
-          bool store = true;
-          if (kmer_count[(kmer_key>>2)] > count_threshold) store = false;
+          // no ambiguous nucleotides in the k-mer (will only be true if mask_N is set)
+          if ( !skip_kmer )
+          {
+            // character array to hold an unsigned long long integer for CMPH
+            char a[38] = {0};
+            sprintf(a,"%llu",(kmer_key>>2));
+            const char *key = a;
+            id = cmph_search(hash, key, (cmph_uint32)strlen(key));
+            
+            add_id_to_burst_trie( lookup_table[kmer_key_short_f].trie_F, kmer_key_short_f_p, id );
+            add_id_to_burst_trie( lookup_table[kmer_key_short_r].trie_R, kmer_key_short_r_rp, id );
+            
+            // if # of k-mer occurrences exceeds threshold, do not record its positions
+            bool store = true;
+            if (kmer_count[(kmer_key>>2)] > count_threshold) store = false;
 
-          add_kmer_to_table( positions_tbl+id, i, index_pos, max_pos, store);
+            add_kmer_to_table( positions_tbl+id, i, index_pos, max_pos, store);
+          }
           
           // shift the 19-mer and 9-mers
           if ( j != numwin-1 )
@@ -2155,9 +2361,26 @@ int main (int argc, char** argv)
             {
               (( kmer_key_short_f <<= 2 ) &= mask32 ) |= (int)*kmer_key_short_f_p++;
               (( kmer_key_short_r <<= 2 ) &= mask32 ) |= (int)*kmer_key_short_r_p++;
+
+              // skip k-mers with ambiguous nucleotides
+              if ( mask_N )
+              {
+                if ((int)*kmer_key_ptr == 5 )
+                {
+                  skip_kmer = true;
+                  skip_kmer_pos = j+pread_gv;
+                }
+              }
+
               (( kmer_key <<= 2 ) &= mask64 ) |= (int)*kmer_key_ptr++;
               kmer_key_short_r_rp--;
               index_pos++;
+            }
+
+            // skip k-mers with ambiguous nucleotides
+            if ( mask_N )
+            {
+              if ( skip_kmer && (j+1 > skip_kmer_pos) ) skip_kmer = false;
             }
           }
         }
