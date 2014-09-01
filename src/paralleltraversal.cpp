@@ -2813,6 +2813,7 @@ paralleltraversal ( char* inputreads,
                         if ( (num_0_error_hits + num_1_error_hits) >= seed_hits_gv )
                         {
                           int32_t lower_bound_errors = 2*(numwin - num_0_error_hits - kmers_0_error_no_pos - num_1_error_hits - kmers_1_error_no_pos) + num_1_error_hits + kmers_1_error_no_pos;
+                          cout << "lower_bound_errors = " << lower_bound_errors << endl;
                           //if ( lower_bound_errors < 0 )
                           //{
                           //  fprintf(stderr, "  ERROR: lower_bound_errors cannot be negative. (paralleltraversal.cpp)\n");
@@ -2837,7 +2838,6 @@ paralleltraversal ( char* inputreads,
                         cout << "\t1-error = " << most_frequent_seq_bound[candidate_refs[l].second].second;
                         cout << "\t1-error no pos = " << kmers_1_error_no_pos;
                         cout << "\ttotal hits = " << most_frequent_seq_bound[candidate_refs[l].second].first+most_frequent_seq_bound[candidate_refs[l].second].second << endl;
-                        cout << "\tlower_bound_errors = " << lower_bound_errors << endl;
                       }
 
                       if ( readn > 703 ) exit(1); //tmp
