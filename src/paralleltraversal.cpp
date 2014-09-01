@@ -2837,7 +2837,10 @@ paralleltraversal ( char* inputreads,
                         cout << "\t1-error = " << most_frequent_seq_bound[candidate_refs[l].second].second;
                         cout << "\t1-error no pos = " << kmers_1_error_no_pos;
                         cout << "\ttotal hits = " << most_frequent_seq_bound[candidate_refs[l].second].first+most_frequent_seq_bound[candidate_refs[l].second].second << endl;
+                        cout << "\tlower_bound_errors = " << lower_bound_errors << endl;
                       }
+
+                      if ( readn > 703 ) exit(1); //tmp
                     }
                     // sort sequences based on highest number of hits              
                     else
