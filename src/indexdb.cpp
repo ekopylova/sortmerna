@@ -108,14 +108,14 @@ char map_nt_mask_N[122] = {
     5,   5};
 
 
-/* length of the sliding window parameters */
+// length of the sliding window parameters
 uint32_t lnwin_gv = 0;
 uint32_t pread_gv = 0;
 uint32_t partialwin_gv = 0;
 
 uint32_t numseq_gv = 0;
 
-/* bit masking during sliding of window by 1 character */
+// bit masking during sliding of window by 1 character
 uint32_t mask32 = 0;
 uint64_t mask64 = 0;
 
@@ -2142,18 +2142,16 @@ int main (int argc, char** argv)
       cout << "stddev = " << sqrt(variance_c) << endl;
       cout << "threshold = " << count_threshold << endl;
 
-      double mu = location_param(mean_c, variance_c);
-      cout << "mu = " << mu << endl;
-      double sigma_sqr = scale_param(mean_c, variance_c);
-      cout << "sigma_sqr = " << sigma_sqr << endl;
-      double mean_log = lognormal_mean(mu, sigma_sqr);
-      double variance_log = lognormal_variance(mu, sigma_sqr);
-      double stddev_log = sqrt(variance_log);
-
-      cout << "lognormal mean = " << mean_log << endl;
-      cout << "lognormal stddev = " << stddev_log << endl;
-      cout << "lognormal threshold = " << mean_log+(3*stddev_log) << endl;
-
+      //double mu = location_param(mean_c, variance_c);
+      //cout << "mu = " << mu << endl;
+      //double sigma_sqr = scale_param(mean_c, variance_c);
+      //cout << "sigma_sqr = " << sigma_sqr << endl;
+      //double mean_log = lognormal_mean(mu, sigma_sqr);
+      //double variance_log = lognormal_variance(mu, sigma_sqr);
+      //double stddev_log = sqrt(variance_log);
+      //cout << "lognormal mean = " << mean_log << endl;
+      //cout << "lognormal stddev = " << stddev_log << endl;
+      //cout << "lognormal threshold = " << mean_log+(3*stddev_log) << endl;
 
       //map<uint32_t,uint32_t>::iterator it2; //tmp
       //cout << "# occurrences\t# k-mers\n"; //tmp
