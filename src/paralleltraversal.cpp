@@ -2813,11 +2813,11 @@ paralleltraversal ( char* inputreads,
                         if ( (num_0_error_hits + num_1_error_hits) >= seed_hits_gv )
                         {
                           int32_t lower_bound_errors = 2*(numwin - num_0_error_hits - kmers_0_error_no_pos - num_1_error_hits - kmers_1_error_no_pos) + num_1_error_hits + kmers_1_error_no_pos;
-                          if ( lower_bound_errors < 0 )
-                          {
-                            fprintf(stderr, "  ERROR: lower_bound_errors cannot be negative. (paralleltraversal.cpp)\n");
-                            exit(EXIT_FAILURE);
-                          }
+                          //if ( lower_bound_errors < 0 )
+                          //{
+                          //  fprintf(stderr, "  ERROR: lower_bound_errors cannot be negative. (paralleltraversal.cpp)\n");
+                          //  exit(EXIT_FAILURE);
+                          //}
                           candidate_refs.push_back(mypair((uint32_t)lower_bound_errors, map_it_bound->first));
                         }
                       }
