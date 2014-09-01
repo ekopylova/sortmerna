@@ -2374,9 +2374,9 @@ paralleltraversal ( char* inputreads,
                                                                   read_max_SW_score) schedule(dynamic,256)
           for ( int32_t readn = 1; readn < strs; readn+=2 )
           {
-#ifdef debug_align
+//#ifdef debug_align
             cout << "readn = " << readn << endl; //TESTING
-#endif                   
+//#endif                   
             // for reverse reads
             if ( !forward_gv )
             {
@@ -2697,7 +2697,7 @@ paralleltraversal ( char* inputreads,
                 // the read and a candidate reference sequence
                 bool aligned = false;
                           
-                // output read if matched at more than RATIO windows
+                // last window on the read, continue in-depth analyses
                 if ( win_num == numwin-1 )
                 {
                   // flag to check whether read was formatted to 0-4 alphabet
