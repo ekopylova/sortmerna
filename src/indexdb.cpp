@@ -2421,10 +2421,10 @@ int main (int argc, char** argv)
       cout << "maximum run of skipped k-mers = " << max_run << endl;
       cout << "minimum run of skipped k-mers = " << min_run << endl;
 
-      for (int f = 0; f < number_elements; f++)
+      for (int ff = 0; ff < number_elements; ff++)
       {
-        if (positions_tbl[f].size > count_threshold)
-          cout << "positions_tbl[" << f << "].size = " << positions_tbl[f].size << endl;
+        if (positions_tbl[ff].size > count_threshold)
+          cout << "positions_tbl[" << ff << "].size = " << positions_tbl[ff].size << endl;
       }
 
       TIME(f);
