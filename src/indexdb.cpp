@@ -414,7 +414,6 @@ inline void insert_prefix( NodeElement* trie_node,
 inline void add_kmer_to_table( kmer_origin* positions_tbl,
                                uint32_t seq,
                                uint32_t pos,
-                               uint32_t max_pos,
                                bool store)
 {
 	int32_t size = positions_tbl->size;
@@ -434,11 +433,7 @@ inline void add_kmer_to_table( kmer_origin* positions_tbl,
 	}
 	// add a position for an existing k-mer occurrence
 	else
-	{
-    // max_pos == 0 means to store all occurrences (default), otherwise
-    // stop storing occurrences when size == max_pos
-		//if ( (max_pos > 0) && (size == max_pos) ) return ;
-        
+	{        
 		seq_pos* src = positions_tbl->arr;
 		positions_tbl->arr = (seq_pos*)malloc((size+1)*sizeof(seq_pos));
 		memset(positions_tbl->arr,0,(size+1)*sizeof(seq_pos));
@@ -1042,10 +1037,11 @@ void printlist()
   #ifdef interval
   printf("     %s--interval%s      %sINT%s             index every INT L-mer in the reference database             %s1%s\n","\033[1m","\033[0m","\033[4m","\033[0m","\033[4m","\033[0m");
   #endif
-  printf("     %s--max_pos%s       %sINT%s             maximum number of positions to store for each unique L-mer  %s10000%s\n","\033[1m","\033[0m","\033[4m","\033[0m","\033[4m","\033[0m");
+  printf("     %s-S%s              %sINT%s             the scale factor for threshold = mean + S*stddev            %s50%s\n","\033[1m","\033[0m","\033[4m","\033[0m","\033[4m","\033[0m");
+  printf("                                     this threshold sets the maximum number of occurrences\n");
+  printf("                                     of a seed that can be stored.\n");
   printf("     %s--mask_N%s        %sFLAG%s            do not include k-mers having an ambiguous nucleotide        %soff%s\n","\033[1m","\033[0m","\033[4m","\033[0m","\033[4m","\033[0m");
   printf("                                             in the index\n");
-  printf("                                      (setting --max_pos 0 will store all positions)\n");
 	printf("     %s-v%s              %sFLAG%s            verbose\n","\033[1m","\033[0m","\033[4m","\033[0m");
 	printf("     %s-h%s              %sFLAG%s            help	\n\n","\033[1m","\033[0m","\033[4m","\033[0m");
 	exit(EXIT_FAILURE);
@@ -1064,27 +1060,28 @@ void printlist()
  **************************************************************************************************************/
 int main (int argc, char** argv)
 {
-	int narg = 1;
-	// time
-	double	s = 0.0;
-	double  f = 0.0;
-	// memory of index
-	double mem = 0;
-	bool mem_is_set = false;
+  int narg = 1;
+  // time
+  double	s = 0.0;
+  double  f = 0.0;
+  // memory of index
+  double mem = 0;
+  bool mem_is_set = false;
   bool fast_set = false;
 	bool sensitive_set = false;
   bool lnwin_set = false;
   bool interval_set = false;
-  bool max_pos_set = false;
   // vector of (FASTA file, index name) pairs for constructing index
   vector< pair<string,string> > myfiles;
   // pointer to temporary directory
   char* ptr_tmpdir = NULL;
   uint32_t interval = 0;
-  uint32_t max_pos = 0;
   bool mask_N = false;
   bool mask_N_set = false;
   char *map_ptr = NULL;
+  // threshold = mean + s_offset*stddev
+  bool s_offset_set = false;
+  uint32_t s_offset = 0;
     
 	timeval t;
     
@@ -1352,48 +1349,6 @@ int main (int argc, char** argv)
             printlist();
           }
         }
-        // maximum positions to store for a unique L-mer
-        else if ( strcmp ( myoption, "max_pos" ) == 0 )
-        {
-          if (argv[narg+1] == NULL)
-          {
-            fprintf(stderr,"\n  %sERROR%s: --max_pos requires a positive "
-                           "integer as input (ex. --max_pos 250).\n\n",
-                           "\033[0;31m","\033[0m");
-            exit(EXIT_FAILURE);
-          }
-          // set max_pos
-          if ( !max_pos_set )
-          {
-            if ( argv[narg+1][0] == '-' )
-            {
-              fprintf(stderr,"\n  %sERROR%s: --max_pos requires a positive "
-                             "integer as input (ex. --max_pos 250).\n\n",
-                             "\033[0;31m","\033[0m");
-              exit(EXIT_FAILURE);
-            }
-            else if (isdigit(argv[narg+1][0]))
-            {
-              max_pos = atoi(argv[narg+1]);
-              narg+=2;
-              max_pos_set = true;
-            }
-            else
-            {
-              fprintf(stderr,"\n  %sERROR%s: --max_pos requires a positive "
-                             "integer as input (ex. --max_pos 250).\n\n",
-                             "\033[0;31m","\033[0m");
-              exit(EXIT_FAILURE);
-            }
-          }
-          else
-          {
-            fprintf(stderr,"\n  %sERROR%s: --max_pos has been set twice, "
-                           "please verify your choice\n\n","\033[0;31m",
-                           "\033[0m");
-            printlist();
-          }
-        }
 				else
 				{
 					fprintf(stderr,"\n  %sERROR%s: unknown option --%s.\n\n",
@@ -1402,7 +1357,30 @@ int main (int argc, char** argv)
 					exit(EXIT_FAILURE);
 				}
 			}
-      break;         
+      break;
+      case 'S':
+      {
+        if ( !s_offset_set )
+        {
+          char *pEnd = NULL;
+          s_offset = strtol( argv[narg+1], &pEnd, 10 );
+          if ( !s_offset )
+          {
+            fprintf(stderr, "\n  %sERROR%s: -S [INT] must be a positive integer "
+                            "value.\n\n","\033[0;31m","\033[0m");
+            exit(EXIT_FAILURE);
+          }
+          narg+=2;
+          s_offset_set = true;
+        }
+        else
+        {
+          fprintf(stderr,"\n  %sERROR%s: option -S can only be set once,\n\n",
+                         "\033[0;31m","\033[0m");
+          exit(EXIT_FAILURE);
+        } 
+      }
+      break;      
 			case 'L':
 			{
 				if ( fast_set || sensitive_set )
@@ -1514,11 +1492,11 @@ int main (int argc, char** argv)
 	if ( !lnwin_set ) lnwin_gv = 18;
   // set the default interval length
   if ( !interval_set ) interval = 1;
-  // set the default max_pos, store maximum 10000 positions for each L-mer
-  if ( !max_pos_set ) max_pos = 10000;
   // set the nucleotide to integer encode matrix
   if ( mask_N ) map_ptr = map_nt_mask_N;
   else map_ptr = map_nt;
+  // default threshold for storing k-mer positions
+  if ( !s_offset_set ) s_offset = 30;
     
 	pread_gv = lnwin_gv+1;
 	partialwin_gv = lnwin_gv/2;
@@ -1636,14 +1614,10 @@ int main (int argc, char** argv)
   eprintf("\n  Parameters summary: \n");
   eprintf("    K-mer size: %d\n",lnwin_gv+1);
   eprintf("    K-mer interval: %d\n",interval);
-  if ( max_pos == 0 )
-    eprintf("    Maximum positions to store per unique K-mer: all\n");
-  else
-    eprintf("    Maximum positions to store per unique K-mer: %d\n", max_pos);
   if (mask_N)
-    eprintf("    Include k-mers with ambiguous nucleotides in index\n");
-  else
     eprintf("    Do not include k-mers with ambiguous nucleotides in index\n");
+  else
+    eprintf("    Include k-mers with ambiguous nucleotides in index\n");
   
   eprintf("\n  Total number of databases to index: %d\n", (int)myfiles.size());
     
@@ -2136,7 +2110,7 @@ int main (int argc, char** argv)
       double mean_c = mean(counts);
       double variance_c = variance(counts, mean_c);
       double stddev_c = sqrt(variance_c);
-      uint32_t count_threshold = mean_c+(3*stddev_c);
+      uint32_t count_threshold = mean_c+(s_offset*stddev_c);
 
       cout << "\nmean = " << mean_c << endl;
       cout << "stddev = " << sqrt(variance_c) << endl;
@@ -2231,11 +2205,20 @@ int main (int argc, char** argv)
       uint32_t i = 0;
       
       // reset the file pointer to the beginning of the current part
-      fseek(fp,start_part,SEEK_SET);          
+      fseek(fp,start_part,SEEK_SET);   
+
+      uint32_t max_run = 0; //tmp
+      uint32_t min_run = 1000000; //tmp 
+      uint32_t total_skips = 0; //tmp 
+      // 18-mer, <min range, max range>
+      map<unsigned long long int,pair<uint32_t,uint32_t> > kmer_count_map; //tmp   
         
       TIME(s);
       do
       {
+        vector<uint32_t> skipped_kmers; //tmp
+        uint32_t length_void = 0; //tmp 
+
         long int start_seq = ftell(fp);
         nt = fgetc(fp);
 
@@ -2347,9 +2330,34 @@ int main (int argc, char** argv)
             
             // if # of k-mer occurrences exceeds threshold, do not record its positions
             bool store = true;
-            if (kmer_count[(kmer_key>>2)] > count_threshold) store = false;
+            if (kmer_count[(kmer_key>>2)] > count_threshold)
+            { 
+              store = false;
+              //cout << "-"; //tmp
+              length_void++; //tmp
+              total_skips++; //tmp
 
-            add_kmer_to_table( positions_tbl+id, i, index_pos, max_pos, store);
+              // k-mer seen first time, add to map
+              if ( kmer_count_map.find(kmer_key>>2) == kmer_count_map.end() )
+              {
+                pair<uint32_t,uint32_t> tmp (j, j);
+                kmer_count_map[kmer_key>>2] = tmp;
+              }
+              // k-mer seen more than once, update range
+              else
+              {
+                if ( j < kmer_count_map[kmer_key>>2].first ) kmer_count_map[kmer_key>>2].first = j;
+                else if ( j > kmer_count_map[kmer_key>>2].second ) kmer_count_map[kmer_key>>2].second = j;
+              }
+            }
+            else
+            { 
+              //cout << "X"; //tmp
+              skipped_kmers.push_back(length_void);
+              length_void = 0;
+            }
+
+            add_kmer_to_table( positions_tbl+id, i, index_pos, store);
           }
           
           // shift the 19-mer and 9-mers
@@ -2382,14 +2390,37 @@ int main (int argc, char** argv)
             }
           }
         }
-        
+
+        //cout << endl;
+
+        for ( int p = 0; p < skipped_kmers.size(); p++ )
+        {
+          // max
+          skipped_kmers[p] > max_run ? max_run = skipped_kmers[p] : max_run;
+          // min
+          skipped_kmers[p] < min_run ? min_run = skipped_kmers[p] : min_run;
+        }
+
         delete [] myseq;
         delete [] myseqr;
         
         // next sequence
         i++;
             
-      } while ( nt != EOF ); /// for all file
+      } while ( nt != EOF ); // for all file
+
+      //map<unsigned long long int,pair<uint32_t,uint32_t> >::iterator it3; //tmp
+      //for ( it3 = kmer_count_map.begin(); it3 != kmer_count_map.end(); it3++ )
+      //  cout << it3->first << "\t[" << it3->second.first << ", " << it3->second.second << "]\n"; 
+
+      cout << "maximum run of skipped k-mers = " << max_run << endl;
+      cout << "minimum run of skipped k-mers = " << min_run << endl;
+
+      for (int f = 0; f < number_elements; f++)
+      {
+        if (positions_tbl[f].size > count_threshold)
+          cout << "positions_tbl[" << f << "].size = " << positions_tbl[f].size << endl;
+      }
 
       TIME(f);
       eprintf(" done [%f sec]\n", (f-s));

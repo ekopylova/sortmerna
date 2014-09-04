@@ -124,6 +124,13 @@ char nt_table[128] = {
 char complement[4] = {3,2,1,0};
 
 
+bool sort_errors_asc ( const pair<int32_t, uint32_t> &a, const pair<int32_t, uint32_t> &b )
+{
+  if ( a.first == b.first ) return ( a.second > b.second );
+  else return ( a.first < b.first );
+}
+
+
 /*! @fn smallest()
     @brief Determine the smallest integer.
     @details The mypair data structure holds two integers,
@@ -149,7 +156,7 @@ bool smallest ( const mypair &a, const mypair &b )
     @param const mypair &b
     @return largest integer of a and b, or a if a == b
 */
-bool largest ( const mypair &a, const mypair &b )
+bool largest ( const pair<int32_t, uint32_t> &a, const pair<int32_t, uint32_t> &b )
 {
   if ( a.first == b.first ) return ( a.second > b.second );
   else return ( a.first > b.first );
@@ -2374,9 +2381,9 @@ paralleltraversal ( char* inputreads,
                                                                   read_max_SW_score) schedule(dynamic,256)
           for ( int32_t readn = 1; readn < strs; readn+=2 )
           {
-//#ifdef debug_align
+#ifdef debug_align
             cout << "readn = " << readn << endl; //TESTING
-//#endif                   
+#endif                   
             // for reverse reads
             if ( !forward_gv )
             {
@@ -2407,7 +2414,7 @@ paralleltraversal ( char* inputreads,
             uint32_t readlen = 0;
             // maximum errors allowed in the sum of all seed hits to a reference
             // sequence to consider the reference sequence as a candidate
-            uint32_t upper_bound_errors = 0;
+            int32_t upper_bound_errors = 0;
                         
             // change the read into an integer alphabet -- FASTA
             if ( filesig == '>' )
@@ -2609,7 +2616,12 @@ paralleltraversal ( char* inputreads,
                     if ( pass_n == 0 )
                     {
                       // current k-mer hit with 0-errors
-                      if (accept_zero_kmer) { kmer_errors[id_hits[0].id] = 0; cout << "\nwin_num = " << win_num << " has 0-error match for id = " << id_hits[0].id;}
+                      if (accept_zero_kmer) 
+                      {
+                        kmer_errors[id_hits[0].id] = 0;
+                       ///cout << "\nwin_num = " << id_hits[0].win 
+                       ///      << " has 0-error match for id = " << id_hits[0].id;
+                      }
                     }
 
                   }//~if exact half window exists in the burst trie
@@ -2684,7 +2696,10 @@ paralleltraversal ( char* inputreads,
                       {
                         // set 1-error k-mers (skipping 0-error which were set earlier)
                         if ( kmer_errors.find(id_hits[i].id) == kmer_errors.end() )
+                        {
                           kmer_errors[id_hits[i].id] = 1;
+                          ///cout << "\nwin_num = " << id_hits[i].win << " has 1-error match for id = " << id_hits[i].id; //tmp
+                        }
                       }
                     }
                                         
@@ -2718,14 +2733,14 @@ paralleltraversal ( char* inputreads,
                     map<uint32_t, mypair >::iterator map_it_bound;
 
                     // map<seq, number of occurrences> most_frequent_seq (for pass_n > 0)
-                    map<uint32_t,uint32_t> most_frequent_seq_lis;
-                    map<uint32_t,uint32_t>::iterator map_it_lis;
+                    map<uint32_t,int32_t> most_frequent_seq_lis;
+                    map<uint32_t,int32_t>::iterator map_it_lis;
                              
                     uint32_t max_seq = 0;
                     // maximum number of hits
                     uint32_t max_occur = 0;
                     // minimum # of errors in the sum of all seed hits
-                    uint32_t minimized_errors = 0;
+                    int32_t minimized_errors = 0;
                                         
                     // STEP 2: for every reference sequence, compute the number of
                     // window hits belonging to it
@@ -2735,6 +2750,15 @@ paralleltraversal ( char* inputreads,
                                                                                         
                       // number of entries in the positions table for this id
                       int32_t num_hits = positions_tbl[_id].size;
+
+                      // tmp
+                      /*
+                      cout << "\n";
+                      if ( pass_n == 0 )
+                      {
+                        cout << i << "\t_id = " << _id << "\tnum_hits = " << num_hits << endl;
+                      }
+                      */
 
                       // increment # 0-error or # 1-error hits for which positions
                       // were not stored (number of occurrences exceeded threshold)
@@ -2757,7 +2781,9 @@ paralleltraversal ( char* inputreads,
 
                         // use error minimizing equation to sort candidate reference sequences
                         if (pass_n == 0)
-                        {                      
+                        {  
+                          ///cout << "\tseq" << j << "\t" << seq << endl; //tmp
+
                           // sequence already exists in the map, increment it's value
                           if ( (map_it_bound = most_frequent_seq_bound.find(seq)) != most_frequent_seq_bound.end() )
                           {
@@ -2794,9 +2820,9 @@ paralleltraversal ( char* inputreads,
                         }
                       }
                     }
-                                                          
-                    // <mypair> = <number of occurrences of a sequence, index of sequence>
-                    vector<mypair> candidate_refs;
+
+                    // store lower bound # errors and the reference sequence                                                          
+                    vector<pair<int32_t, uint32_t> > candidate_refs;
 
                     // sort sequences based on minimum error 2*(n/k-x-y)+y
                     if ( pass_n == 0 )
@@ -2809,27 +2835,30 @@ paralleltraversal ( char* inputreads,
                         uint32_t num_0_error_hits = map_it_bound->second.first;
                         // number of 1-error hits
                         uint32_t num_1_error_hits = map_it_bound->second.second;
+
+                        ///cout << "seq = " << map_it_bound->first << "\tnum_0_error_hits = " << num_0_error_hits << "\tnum_1_error_hits = " << num_1_error_hits << endl; //tmp
+
                         // total number of hits passes the threshold
                         if ( (num_0_error_hits + num_1_error_hits) >= seed_hits_gv )
                         {
-                          int32_t lower_bound_errors = 2*(numwin - num_0_error_hits - kmers_0_error_no_pos - num_1_error_hits - kmers_1_error_no_pos) + num_1_error_hits + kmers_1_error_no_pos;
-                          cout << "\nnumwin = " << numwin << endl;
-                          cout << "\nlower_bound_errors = " << lower_bound_errors << endl;
+                          int32_t lower_bound_errors = 2*(numwin - num_0_error_hits - num_1_error_hits) + num_1_error_hits;
+                          ///cout << "\nnumwin = " << numwin << endl;
+                          ///cout << "\nlower_bound_errors = " << lower_bound_errors << endl;
                           //if ( lower_bound_errors < 0 )
                           //{
                           //  fprintf(stderr, "  ERROR: lower_bound_errors cannot be negative. (paralleltraversal.cpp)\n");
                           //  exit(EXIT_FAILURE);
                           //}
-                          candidate_refs.push_back(mypair((uint32_t)lower_bound_errors, map_it_bound->first));
+                          candidate_refs.push_back(pair<int32_t, uint32_t>(lower_bound_errors, map_it_bound->first));
                         }
                       }
                       //most_frequent_seq_bound.clear();
 
                       // sort sequences with the smallest error to the head of the array
-                      sort(candidate_refs.begin(), candidate_refs.end(), smallest);
+                      sort(candidate_refs.begin(), candidate_refs.end(), sort_errors_asc);
 
                       // tmp
-                      cout << "\n\ncandidate_refs.size() = " << candidate_refs.size() << endl;
+                      /*cout << "\n\ncandidate_refs.size() = " << candidate_refs.size() << endl;
                       for ( int l = 0; l < candidate_refs.size(); l++ )
                       {
                         cout << "seq = " << candidate_refs[l].second; 
@@ -2840,8 +2869,7 @@ paralleltraversal ( char* inputreads,
                         cout << "\t1-error no pos = " << kmers_1_error_no_pos;
                         cout << "\ttotal hits = " << most_frequent_seq_bound[candidate_refs[l].second].first+most_frequent_seq_bound[candidate_refs[l].second].second << endl;
                       }
-
-                      if ( readn > 703 ) exit(1); //tmp
+                      */
                     }
                     // sort sequences based on highest number of hits              
                     else
@@ -2854,7 +2882,7 @@ paralleltraversal ( char* inputreads,
                         // pass candidate reference sequences for further analyses
                         // only if they have enough seed hits
                         if ( map_it_lis->second >= seed_hits_gv )
-                          candidate_refs.push_back(mypair(map_it_lis->second,map_it_lis->first));
+                          candidate_refs.push_back(pair<int32_t, uint32_t>(map_it_lis->second,map_it_lis->first));
                       }
                       
                       most_frequent_seq_lis.clear();
