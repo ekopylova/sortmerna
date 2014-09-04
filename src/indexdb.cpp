@@ -1253,6 +1253,11 @@ int main (int argc, char** argv)
               narg+=2;
           }
         }
+        // deprecated option (not used)
+        else if ( strcmp ( myoption, "max_pos" ) == 0 )
+        {
+          ;
+        }
 				else if ( strcmp ( myoption, "fast") == 0 )
 				{
 					if ( lnwin_gv > 0 )
@@ -1496,7 +1501,7 @@ int main (int argc, char** argv)
   if ( mask_N ) map_ptr = map_nt_mask_N;
   else map_ptr = map_nt;
   // default threshold for storing k-mer positions
-  if ( !s_offset_set ) s_offset = 30;
+  if ( !s_offset_set ) s_offset = 50;
     
 	pread_gv = lnwin_gv+1;
 	partialwin_gv = lnwin_gv/2;
