@@ -1256,7 +1256,7 @@ int main (int argc, char** argv)
         // deprecated option (not used)
         else if ( strcmp ( myoption, "max_pos" ) == 0 )
         {
-          ;
+          narg+=2;
         }
 				else if ( strcmp ( myoption, "fast") == 0 )
 				{
