@@ -36,6 +36,7 @@ class SortmernaV2Tests(TestCase):
 
         # reference databases
         self.db_bac16s = join(self.root, "silva-bac-16s-database-id85.fasta")
+        self.db_euk18s = join(self.root, "silva-euk-18s-database-id95.fasta")
         self.db_gg_13_8 = join(self.root, "gg_13_8_ref_set.fasta")
 
         # reads
@@ -46,6 +47,55 @@ class SortmernaV2Tests(TestCase):
 
     def tearDown(self):
         rmtree(self.output_dir)
+
+    def test_multiple_databases(self):
+        """ Test indexing and searching multiple databases using SortMeRNA
+        """
+        index_db_1 = join(self.output_dir, "db_bac16s")
+        index_db_2 = join(self.output_dir, "db_euk18s")
+        index_path = "%s,%s:%s,%s" % (self.db_gg_13_8, index_db_1, self.db_euk18s, index_db_2)
+
+        indexdb_command = ["indexdb_rna",
+                           "--ref",
+                           index_path,
+                           "-v"]
+
+        proc = Popen(indexdb_command,
+                     stdout=PIPE,
+                     stderr=PIPE,
+                     close_fds=True)
+
+        proc.wait()
+
+        stdout, stderr = proc.communicate()
+
+        self.assertTrue(stdout)
+        self.assertFalse(stderr) 
+
+        aligned_basename = join(self.output_dir, "aligned")
+        other_basename = join(self.output_dir, "other")
+
+        sortmerna_command = ["sortmerna",
+                             "--ref", index_path,
+                             "--aligned", aligned_basename,
+                             "--other", other_basename,
+                             "--reads", self.set5,
+                             "--log",
+                             "--blast", "3",
+                             "--fastx",
+                             "--print_all_reads",
+                             "-v"]
+
+        proc = Popen(sortmerna_command,
+                     stdout=PIPE,
+                     stderr=PIPE,
+                     close_fds=True)
+
+        proc.wait()
+
+        stdout, stderr = proc.communicate()
+
+        print stderr
 
     def test_indexdb_default_param(self):
     	""" Test indexing a database using SortMeRNA
