@@ -225,7 +225,7 @@ extern int32_t num_alignments_gv;
 	matches required in order to continue to the next step
 	of searching for the LIS.
 */
-extern int32_t seed_hits_gv;
+extern uint32_t seed_hits_gv;
 
 /*! @brief Number or percent (if followed by %) of nucleotides 
 	to add to each edge of the alignment region prior to SSW 

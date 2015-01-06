@@ -124,6 +124,13 @@ char nt_table[128] = {
 char complement[4] = {3,2,1,0};
 
 
+bool sort_errors_asc ( const pair<int32_t, uint32_t> &a, const pair<int32_t, uint32_t> &b )
+{
+  if ( a.first == b.first ) return ( a.second > b.second );
+  else return ( a.first < b.first );
+}
+
+
 /*! @fn smallest()
     @brief Determine the smallest integer.
     @details The mypair data structure holds two integers,
@@ -139,7 +146,7 @@ char complement[4] = {3,2,1,0};
 */
 bool smallest ( const mypair &a, const mypair &b )
 {
-  if ( a.first == b.first ) return ( a.second < b.second );
+  if ( a.first == b.first ) return ( a.second > b.second );
   else return ( a.first < b.first );
 }
 
@@ -149,7 +156,7 @@ bool smallest ( const mypair &a, const mypair &b )
     @param const mypair &b
     @return largest integer of a and b, or a if a == b
 */
-bool largest ( const mypair &a, const mypair &b )
+bool largest ( const pair<int32_t, uint32_t> &a, const pair<int32_t, uint32_t> &b )
 {
   if ( a.first == b.first ) return ( a.second > b.second );
   else return ( a.first > b.first );
@@ -212,6 +219,47 @@ void format_rev(char* start_read,char* end_read,char* myread,char filesig)
   {
     while ( *end_read != '\n' ) { *myread++ = rc_table[(int)*end_read--]; }
     *myread='\n';
+  }
+}
+
+
+/* @function count_mismatches_gaps()
+ * @brief compute the number of matches, mismatches and gaps in a SW alignment
+ *
+ * */
+inline void count_mismatches_gaps( s_align* result,
+                                   uint32_t &mismatches,
+                                   uint32_t &gaps,
+                                   double &id,
+                                   char* ref_seq_ptr,
+                                   char* read_seq_ptr)
+{
+  char to_char[5] = {'A','C','G','T','N'};
+  int32_t qb = result->ref_begin1;
+  int32_t pb = result->read_begin1;
+
+  for (uint32_t c2 = 0; c2 < result->cigarLen; ++c2) 
+  {
+    uint32_t letter = 0xf&*(result->cigar + c2);
+    uint32_t length = (0xfffffff0&*(result->cigar + c2))>>4;
+    if (letter == 0) 
+    {
+      for (int p = 0; p < length; ++p)
+      {
+        if ( (char)to_char[(int)*(ref_seq_ptr + qb)] != (char)to_char[(int)*(read_seq_ptr + pb)] ) ++mismatches;
+        else ++id;
+        ++qb;
+        ++pb;
+      }
+    } else if (letter == 1) 
+    {
+      pb += length;
+      gaps += length;
+    } else 
+    {
+      qb += length;
+      gaps += length;
+    }
   }
 }
 
@@ -381,7 +429,8 @@ traversetrie_align ( NodeElement *trie_t,
                   return;
                 }
                                 
-                // exact match not found, do not include duplicates of 1-error match (for the same window on read)
+                // exact match not found, do not include duplicates of 1-error match
+                // (for the same window on read)
                 if ( !id_hits.empty() )
                 {
                   bool found = false;
@@ -1156,20 +1205,28 @@ load_index( char* ptr_dbindex,
     
   for ( uint32_t i = 0; i < number_elements; i++ )
   {
-    /* the number of positions */
-    inreff.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));
+    // the number of positions
+    inreff.read(reinterpret_cast<char*>(&size), sizeof(int32_t));
     positions_tbl[i].size = size;
-        
-    /* the sequence seq_pos array */
-    positions_tbl[i].arr = new seq_pos[size]();
-        
-    if ( positions_tbl[i].arr == NULL )
+       
+    // k-mer too abundant for positions to be stored 
+    if (size == -1)
     {
-      fprintf(stderr, "  ERROR: could not allocate memory for positions_tbl (paralleltraversal.cpp)\n");
-      exit(EXIT_FAILURE);
+      positions_tbl[i].arr = NULL;
     }
-        
-    inreff.read(reinterpret_cast<char*>(positions_tbl[i].arr), sizeof(seq_pos)*size);
+    else
+    {
+      // the sequence seq_pos array
+      positions_tbl[i].arr = new seq_pos[size]();
+          
+      if ( positions_tbl[i].arr == NULL )
+      {
+        fprintf(stderr, "  ERROR: could not allocate memory for positions_tbl (paralleltraversal.cpp)\n");
+        exit(EXIT_FAILURE);
+      }
+          
+      inreff.read(reinterpret_cast<char*>(positions_tbl[i].arr), sizeof(seq_pos)*size);
+    }
   }
     
   inreff.close();
@@ -2189,11 +2246,13 @@ paralleltraversal ( char* inputreads,
     // and < %coverage is set to 0
     vector<bool> read_hits_denovo(strs, true);
     
-    // array of uint16_t to represent all reads, if the read was aligned with a maximum SW score, its number of alignments is incremeted by 1
+    // array of uint16_t to represent all reads, if the read was aligned with
+    // a maximum SW score, its number of alignments is incremeted by 1
     uint16_t *read_max_SW_score = new uint16_t[strs];
     memset(read_max_SW_score, 0, sizeof(uint16_t)*strs);
     
-    // map accessed by read number, storing a pair <index for smallest SSW score, pointer to array of num_best_hits_gv>
+    // map accessed by read number, storing a pair <index for smallest SSW
+    // score, pointer to array of num_best_hits_gv>
     map<uint32_t, triple_s > read_hits_align_info;
     
     // number of alignments to output per read
@@ -2317,7 +2376,14 @@ paralleltraversal ( char* inputreads,
         for ( int32_t strand = 0; strand < max; strand++ )
         {
           // loop through all of the reads in the file 
-#pragma omp parallel for num_threads(numcpu_gv) shared(lookup_tbl,positions_tbl,buffer,reference_seq,reference_seq_len,read_hits_align_info,read_hits,read_max_SW_score) schedule(dynamic,256)
+          #pragma omp parallel for num_threads(numcpu_gv) shared( lookup_tbl, \
+                                                                  positions_tbl, \
+                                                                  buffer, \
+                                                                  reference_seq, \
+                                                                  reference_seq_len, \
+                                                                  read_hits_align_info, \
+                                                                  read_hits, \
+                                                                  read_max_SW_score) schedule(dynamic,256)
           for ( int32_t readn = 1; readn < strs; readn+=2 )
           {
 #ifdef debug_align
@@ -2351,6 +2417,9 @@ paralleltraversal ( char* inputreads,
             bool read_to_count = true;         
             // length of read
             uint32_t readlen = 0;
+            // maximum errors allowed in the sum of all seed hits to a reference
+            // sequence to consider the reference sequence as a candidate
+            int32_t upper_bound_errors = 0;
                         
             // change the read into an integer alphabet -- FASTA
             if ( filesig == '>' )
@@ -2461,7 +2530,15 @@ paralleltraversal ( char* inputreads,
             uint32_t pass_n = 0;
             
             // the maximum SW score attainable for this read
-            uint32_t max_SW_score = readlen*match;             
+            uint32_t max_SW_score = readlen*match;  
+
+            // record if a seed hit with 0-errors or 1-errors for
+            // all k-mers on the read
+            map<uint32_t, bool> kmer_errors;
+            // number of 0-error hits for which positions were not stored
+            uint32_t kmers_0_error_no_pos = 0;
+            // number of 1-error hits for which positions were not stored
+            uint32_t kmers_1_error_no_pos = 0;
                         
             // loop for each new Pass to granulate seed search intervals
             bool search = true;
@@ -2476,7 +2553,8 @@ paralleltraversal ( char* inputreads,
               // iterate over windows of the template string
               for ( uint32_t win_num = 0; win_num < numwin; win_num++ )
               {
-                // skip position, seed at this position has already been searched for in a previous Pass
+                // skip position, seed at this position has already
+                // been searched for in a previous Pass
                 if ( read_index_hits[read_index] ) goto check_score;
                 // search position, set search bit to true
                 else read_index_hits[read_index].flip();                                
@@ -2536,15 +2614,25 @@ paralleltraversal ( char* inputreads,
                                          id_hits,
                                          readn,
                                          read_index,
-                                         partialwin[index_num]);
-                                        
+                                         partialwin[index_num]);               
 #ifdef debug_align
                                         cout << "\tdone!\n"; //TESTING
 #endif
-                                        
+                    if ( pass_n == 0 )
+                    {
+                      // current k-mer hit with 0-errors
+                      if (accept_zero_kmer) 
+                      {
+                        kmer_errors[id_hits[0].id] = 0;
+                       ///cout << "\nwin_num = " << id_hits[0].win 
+                       ///      << " has 0-error match for id = " << id_hits[0].id;
+                      }
+                    }
+
                   }//~if exact half window exists in the burst trie
                                     
-                  // only search if an exact match has not been found
+                  // exact match has not been found, continue searching
+                  // reverse mini-bursttrie for 1-error matches
                   if ( !accept_zero_kmer )
                   {
                     MYBITSET bitwindowsr[bit_vector_size];
@@ -2603,12 +2691,21 @@ paralleltraversal ( char* inputreads,
                     }//~if exact half window exists in the reverse burst trie                    
                   }//~if (!accept_zero_kmer)
                                              
-                  // associate the ids with the read window number
+                  // associate the 1-error ids with the read window number
                   if ( !id_hits.empty() )
                   {
                     for ( uint32_t i = 0; i < id_hits.size(); i++ )
                     {
                       id_win_hits.push_back(id_hits[i]);
+                      if ( pass_n == 0 )
+                      {
+                        // set 1-error k-mers (skipping 0-error which were set earlier)
+                        if ( kmer_errors.find(id_hits[i].id) == kmer_errors.end() )
+                        {
+                          kmer_errors[id_hits[i].id] = 1;
+                          ///cout << "\nwin_num = " << id_hits[i].win << " has 1-error match for id = " << id_hits[i].id; //tmp
+                        }
+                      }
                     }
                                         
                     readhit++;
@@ -2620,7 +2717,7 @@ paralleltraversal ( char* inputreads,
                 // the read and a candidate reference sequence
                 bool aligned = false;
                           
-                // output read if matched at more than RATIO windows
+                // last window on the read, continue in-depth analyses
                 if ( win_num == numwin-1 )
                 {
                   // flag to check whether read was formatted to 0-4 alphabet
@@ -2634,14 +2731,21 @@ paralleltraversal ( char* inputreads,
                   // STEP 1: the number of matching windows on the read to the
                   // reference database is greater than the threshold,
                   // continue analysis of read
-                  if ( readhit >= (uint32_t)seed_hits_gv )
+                  if ( readhit >= seed_hits_gv )
                   {
-                    // map<seq, number of occurrences> most_frequent_seq_t
-                    map<uint32_t,uint32_t> most_frequent_seq_t;
-                    map<uint32_t,uint32_t>::iterator map_it;
-                                        
+                    // map<seq, <number of 0-errors, number of 1-errors> > most_frequent_seq_bound (for pass_n == 0)
+                    map<uint32_t, mypair > most_frequent_seq_bound;
+                    map<uint32_t, mypair >::iterator map_it_bound;
+
+                    // map<seq, number of occurrences> most_frequent_seq (for pass_n > 0)
+                    map<uint32_t,int32_t> most_frequent_seq_lis;
+                    map<uint32_t,int32_t>::iterator map_it_lis;
+                             
                     uint32_t max_seq = 0;
+                    // maximum number of hits
                     uint32_t max_occur = 0;
+                    // minimum # of errors in the sum of all seed hits
+                    int32_t minimized_errors = 0;
                                         
                     // STEP 2: for every reference sequence, compute the number of
                     // window hits belonging to it
@@ -2650,51 +2754,172 @@ paralleltraversal ( char* inputreads,
                       uint32_t _id = id_win_hits[i].id;
                                                                                         
                       // number of entries in the positions table for this id
-                      uint32_t num_hits = positions_tbl[_id].size;
-                                            
+                      int32_t num_hits = positions_tbl[_id].size;
+
+                      // tmp
+                      /*
+                      cout << "\n";
+                      if ( pass_n == 0 )
+                      {
+                        cout << i << "\t_id = " << _id << "\tnum_hits = " << num_hits << endl;
+                      }
+                      */
+
+                      // increment # 0-error or # 1-error hits for which positions
+                      // were not stored (number of occurrences exceeded threshold)
+                      // (only applies to the first interval pass)
+                      if ( (pass_n == 0) && (num_hits < 0) )
+                      {
+                        // 1-error
+                        if (kmer_errors[_id]) kmers_1_error_no_pos++;
+                        // 0-error
+                        else kmers_0_error_no_pos++;
+                      }
+               
                       // pointer to the seq_pos array in the positions table for this id
-                      seq_pos* positions_tbl_ptr = positions_tbl[_id].arr;
+                      seq_pos* seq_pos_ptr = positions_tbl[_id].arr;
                                             
                       // loop through every position of id
-                      for ( uint32_t j = 0; j < num_hits; j++ )
+                      for ( int32_t j = 0; j < num_hits; j++ )
                       {
-                        uint32_t seq = positions_tbl_ptr++->seq;
-                        
-                        // sequence already exists in the map, increment it's value
-                        if ( (map_it=most_frequent_seq_t.find(seq)) != most_frequent_seq_t.end() )
-                          map_it->second++;
-                        // sequence doesn't exist, add it
-                        else most_frequent_seq_t[seq] = 1;
+                        uint32_t seq = seq_pos_ptr++->seq;
+
+                        // use error minimizing equation to sort candidate reference sequences
+                        if (pass_n == 0)
+                        {  
+                          ///cout << "\tseq" << j << "\t" << seq << endl; //tmp
+
+                          // sequence already exists in the map, increment it's value
+                          if ( (map_it_bound = most_frequent_seq_bound.find(seq)) != most_frequent_seq_bound.end() )
+                          {
+                            // additional 1-error hit
+                            if (kmer_errors[_id]) map_it_bound->second.second++;
+                            // additional 0-error hit
+                            else map_it_bound->second.first++;
+                          }
+                          // sequence doesn't exist, add it
+                          else
+                          {
+                            // increment number of 1-error hits
+                            if (kmer_errors[_id])
+                            { 
+                              mypair tmp (0,1);
+                              most_frequent_seq_bound.insert(pair<uint32_t, mypair >(seq, tmp));
+                            }
+                            // increment number of 0-error hits
+                            else
+                            {
+                              mypair tmp (1,0);
+                              most_frequent_seq_bound.insert(pair<uint32_t, mypair >(seq, tmp));                           
+                            }
+                          }
+                        }//~if (pass_n == 0)
+                        // use LIS to sort candidate reference sequences
+                        else
+                        {
+                          // sequence already exists in the map, increment it's value
+                          if ( (map_it_lis = most_frequent_seq_lis.find(seq)) != most_frequent_seq_lis.end() )
+                            map_it_lis->second++;
+                          // sequence doesn't exist, add it
+                          else most_frequent_seq_lis[seq] = 1;
+                        }
                       }
                     }
-                                                          
-                    // <mypair> = <number of occurrences of a sequence, index of sequence>
-                    vector<mypair> most_frequent_seq;
-                                        
-                    // copy list of occurrences from map to vector for sorting
-                    for ( map_it = most_frequent_seq_t.begin(); map_it != most_frequent_seq_t.end(); map_it++ )
+
+                    // store lower bound # errors and the reference sequence                                                          
+                    vector<pair<int32_t, uint32_t> > candidate_refs;
+
+                    // sort sequences based on minimum error 2*(n/k-x-y)+y
+                    if ( pass_n == 0 )
                     {
-                      // pass candidate reference sequences for further analyses
-                      // only if they have enough seed hits
-                      if ( map_it->second >= (uint32_t)seed_hits_gv )
-                        most_frequent_seq.push_back(mypair(map_it->second,map_it->first));
+                      for ( map_it_bound = most_frequent_seq_bound.begin();
+                            map_it_bound != most_frequent_seq_bound.end();
+                            map_it_bound++ )
+                      {
+                        // number of 0-error hits
+                        uint32_t num_0_error_hits = map_it_bound->second.first;
+                        // number of 1-error hits
+                        uint32_t num_1_error_hits = map_it_bound->second.second;
+
+                        ///cout << "seq = " << map_it_bound->first << "\tnum_0_error_hits = " << num_0_error_hits << "\tnum_1_error_hits = " << num_1_error_hits << endl; //tmp
+
+                        // total number of hits passes the threshold
+                        if ( (num_0_error_hits + num_1_error_hits) >= seed_hits_gv )
+                        {
+                          int32_t lower_bound_errors = 2*(numwin - num_0_error_hits - num_1_error_hits) + num_1_error_hits;
+                          ///cout << "\nnumwin = " << numwin << endl;
+                          ///cout << "\nlower_bound_errors = " << lower_bound_errors << endl;
+                          //if ( lower_bound_errors < 0 )
+                          //{
+                          //  fprintf(stderr, "  ERROR: lower_bound_errors cannot be negative. (paralleltraversal.cpp)\n");
+                          //  exit(EXIT_FAILURE);
+                          //}
+                          candidate_refs.push_back(pair<int32_t, uint32_t>(lower_bound_errors, map_it_bound->first));
+                        }
+                      }
+                      //most_frequent_seq_bound.clear();
+
+                      // sort sequences with the smallest error to the head of the array
+                      sort(candidate_refs.begin(), candidate_refs.end(), sort_errors_asc);
+
+                      // tmp
+                      /*cout << "\n\ncandidate_refs.size() = " << candidate_refs.size() << endl;
+                      for ( int l = 0; l < candidate_refs.size(); l++ )
+                      {
+                        cout << "seq = " << candidate_refs[l].second; 
+                        cout << "\tmin_error = " << candidate_refs[l].first;
+                        cout << "\t0-errors = " << most_frequent_seq_bound[candidate_refs[l].second].first;
+                        cout << "\t0-errors no pos = " << kmers_0_error_no_pos;
+                        cout << "\t1-error = " << most_frequent_seq_bound[candidate_refs[l].second].second;
+                        cout << "\t1-error no pos = " << kmers_1_error_no_pos;
+                        cout << "\ttotal hits = " << most_frequent_seq_bound[candidate_refs[l].second].first+most_frequent_seq_bound[candidate_refs[l].second].second << endl;
+                      }
+                      */
                     }
-                    
-                    most_frequent_seq_t.clear();
-                                        
-                    // sort the highest scoring sequences to the head of the array
-                    sort(most_frequent_seq.begin(), most_frequent_seq.end(), largest);
+                    // sort sequences based on highest number of hits              
+                    else
+                    {
+                      // copy list of occurrences from map to vector for sorting
+                      for ( map_it_lis = most_frequent_seq_lis.begin();
+                            map_it_lis != most_frequent_seq_lis.end();
+                            map_it_lis++ )
+                      {
+                        // pass candidate reference sequences for further analyses
+                        // only if they have enough seed hits
+                        if ( map_it_lis->second >= seed_hits_gv )
+                          candidate_refs.push_back(pair<int32_t, uint32_t>(map_it_lis->second,map_it_lis->first));
+                      }
+                      
+                      most_frequent_seq_lis.clear();
+                                          
+                      // sort sequences with the highest hits to the head of the array
+                      sort(candidate_refs.begin(), candidate_refs.end(), largest);
+                    }//~else sort by LIS (for passes > 0)
                                                                                 
                     // STEP 3: for each reference sequence candidate
                     // (starting from highest scoring)
-                    for ( uint32_t k = 0; k < most_frequent_seq.size(); k++ )
+                    for ( uint32_t k = 0; k < candidate_refs.size(); k++ )
                     {
-                      // the maximum scoring alignment has been found,
-                      // do not search for anymore alignments
+                      // the maximum scoring alignment has been found and all
+                      // possible alignment slots have been filled, do not
+                      // search for anymore alignments
                       if ( (num_best_hits_gv != 0) && (read_max_SW_score[readn] == num_best_hits_gv) ) break;
-                                            
-                      max_occur = most_frequent_seq[k].first;
-                      max_seq = most_frequent_seq[k].second; 
+                                    
+                      // number of hits (incl. hits for which positions were not recorded)        
+                      max_occur = candidate_refs[k].first;
+                      // lower bound error
+                      if ( pass_n == 0 ) 
+                      {
+                        minimized_errors = candidate_refs[k].first;
+                        // number of errors in the sum of all seeds exceeds the
+                        // upper bound on number of errors allowed (computed during
+                        // the alignment of the read with the reference sequence
+                        // having the least number of errors in the sum of all seeds),
+                        // stop further analysis
+                        if ( minimized_errors > upper_bound_errors ) break;
+                      }
+
+                      max_seq = candidate_refs[k].second; 
 #ifdef debug_align
                       cout << "\t\t\t\tmax_occur = " << max_occur << endl; //TESTING
                       cout << "\t\t\t\tmax_seq = " << max_seq << endl; //TESTING
@@ -2702,22 +2927,35 @@ paralleltraversal ( char* inputreads,
                       cout << "\t\t\t\tindex size for reference_seq = " << (numseq_part<<1) << endl; //TESTING
                       cout << "\t\t\t\tbest_x[" << readn << "] = " << best_x[readn] << endl; //TESTING
 #endif                             
-                      // not enough window hits, try to collect more hits or go to next read
-                      if ( max_occur < (uint32_t)seed_hits_gv ) break;
-                                            
                       // update number of reference sequences remaining to check
                       if ( (min_lis_gv > 0) && aligned && (k > 0) )
                       {
                         // only decrement best_x if the next ref sequence to check
                         // has a lower seed count than the previous one
-                        if ( max_occur < most_frequent_seq[k-1].first )
+                        if ( pass_n > 0 )
                         {
-                          #pragma omp critical
+                          if ( max_occur < candidate_refs[k-1].first )
                           {
-                            best_x[readn]--;
-                          }
+                            #pragma omp critical
+                            {
+                              best_x[readn]--;
+                            }
 
-                          if ( best_x[readn] < 1 ) break;
+                            if ( best_x[readn] < 1 ) break;
+                          }
+                        }
+                        // pass_n == 0
+                        else
+                        {
+                          if ( minimized_errors > candidate_refs[k-1].first )
+                          {
+                            #pragma omp critical
+                            {
+                              best_x[readn]--;
+                            }
+
+                            if ( best_x[readn] < 1 ) break;
+                          }                          
                         }
                       }
                       
@@ -2739,11 +2977,11 @@ paralleltraversal ( char* inputreads,
                       for ( uint32_t i = 0; i < id_win_hits.size(); i++ )
                       {
                         uint32_t _id = id_win_hits[i].id;
-                        uint32_t num_hits = positions_tbl[_id].size;
+                        int32_t num_hits = positions_tbl[_id].size;
                         seq_pos* positions_tbl_ptr = positions_tbl[_id].arr;
                                                 
                         // loop through every position of id
-                        for ( uint32_t j = 0; j < num_hits; j++ )
+                        for ( int32_t j = 0; j < num_hits; j++ )
                         {
                           if ( positions_tbl_ptr->seq == max_seq )
                           {
@@ -2795,7 +3033,7 @@ paralleltraversal ( char* inputreads,
                         aligned = false;
 #endif                              
                         // enough windows at this position on genome to search for LIS
-                        if ( vi_read.size() >= (uint32_t)seed_hits_gv )
+                        if ( vi_read.size() >= seed_hits_gv )
                         {
                           vector<uint32_t> list;
                           find_lis(vi_read, list, readn);                                
@@ -2806,7 +3044,7 @@ paralleltraversal ( char* inputreads,
                           {
 #endif                                      
                             // LIS long enough to perform Smith-Waterman alignment
-                            if ( list.size() >= (uint32_t)seed_hits_gv )
+                            if ( list.size() >= seed_hits_gv )
                             {
 #ifdef debug_align
                               cout << "\t\t\t\tLIS = " << list.size() << endl; //TESTING
@@ -2986,6 +3224,17 @@ paralleltraversal ( char* inputreads,
                                     read_hits[readn].flip();
                                     total_reads_mapped++;
                                     reads_matched_per_db[index_num]++;
+                                  }
+
+                                  if ( pass_n == 0 )
+                                  {
+                                    double id = 0;
+                                    uint32_t mismatches = 0;
+                                    uint32_t gaps = 0;
+
+                                    count_mismatches_gaps(result, mismatches, gaps, id, reference_seq[(2*(int)max_seq)+1], myread);
+
+                                    upper_bound_errors = mismatches + gaps;
                                   }
                                   
                                   // output (sam or blast-like) or update alignment information
@@ -3184,37 +3433,10 @@ paralleltraversal ( char* inputreads,
                                     // get the edit distance between reference and read (serves for
                                     // SAM output and computing %id and %query coverage)
                                     double id = 0;
-                                    char to_char[5] = {'A','C','G','T','N'};
-                                    char* ref_seq_ptr = reference_seq[(2*(int)max_seq)+1];
-                                    char* read_seq_ptr = myread;
-                                    int32_t qb = result->ref_begin1;
-                                    int32_t pb = result->read_begin1;
                                     uint32_t mismatches = 0;
                                     uint32_t gaps = 0;
-                                    
-                                    for (uint32_t c2 = 0; c2 < result->cigarLen; ++c2) 
-                                    {
-                                      uint32_t letter = 0xf&*(result->cigar + c2);
-                                      uint32_t length = (0xfffffff0&*(result->cigar + c2))>>4;
-                                      if (letter == 0) 
-                                      {
-                                        for (int p = 0; p < length; ++p)
-                                        {
-                                          if ( (char)to_char[(int)*(ref_seq_ptr + qb)] != (char)to_char[(int)*(read_seq_ptr + pb)] ) ++mismatches;
-                                          else ++id;
-                                          ++qb;
-                                          ++pb;
-                                        }
-                                      } else if (letter == 1) 
-                                      {
-                                        pb += length;
-                                        gaps += length;
-                                      } else 
-                                      {
-                                        qb += length;
-                                        gaps += length;
-                                      }
-                                    }
+
+                                    count_mismatches_gaps(result, mismatches, gaps, id, reference_seq[(2*(int)max_seq)+1], myread);
                                                                         
                                     int32_t align_len = abs(result->read_end1+1 - result->read_begin1);
                                     int32_t total_pos = mismatches+gaps+id;

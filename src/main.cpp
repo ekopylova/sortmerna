@@ -62,7 +62,7 @@ bool fastxout_gv = false;
 bool otumapout_gv = false;
 int32_t min_lis_gv = -1;
 int32_t num_alignments_gv = -1;
-int32_t seed_hits_gv = -1;
+uint32_t seed_hits_gv = 0;
 int32_t edges_gv = -1;
 bool full_search_gv = false;
 /*! @brief Version number */
@@ -231,7 +231,8 @@ main(int argc,
   bool min_lis_gv_set = false;
   bool num_alignments_gv_set = false;
   bool best_gv_set = false;
-  // this BOOL is set if the reads file or the reference file
+  bool seed_hits_set = false;
+  // this flag is set if the reads file or the reference file
   // is empty
   bool exit_early = false;
   // vector of (FASTA file, index name) pairs for loading index
@@ -746,7 +747,7 @@ main(int argc,
             exit(EXIT_FAILURE);
           }
           // set number of seeds
-          if ( seed_hits_gv < 0 )
+          if ( !seed_hits_set )
           {
             char* end = 0;
             seed_hits_gv = (int)strtol(argv[narg+1],&end,10); // convert to integer
@@ -757,6 +758,7 @@ main(int argc,
               exit(EXIT_FAILURE);
             }
             narg+=2;
+            seed_hits_set = true;
           }
           else
           {
@@ -1422,7 +1424,7 @@ main(int argc,
   if ( best_gv_set && !min_lis_gv_set ) min_lis_gv = 2;
       
   // default number of seed hits before searching for candidate LIS
-  if ( seed_hits_gv < 0 ) seed_hits_gv = 2;
+  if ( !seed_hits_set ) seed_hits_gv = 2;
     
   // default number of nucleotides to add to each edge of an alignment
   // region before extension
