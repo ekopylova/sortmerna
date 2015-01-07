@@ -2371,7 +2371,7 @@ paralleltraversal ( char* inputreads,
         if ( forward_gv ^ reverse_gv ) max = 1;
         // search both strands
         else max = 2;
-                
+
         // search the forward and/or reverse strands
         for ( int32_t strand = 0; strand < max; strand++ )
         {
@@ -2387,20 +2387,19 @@ paralleltraversal ( char* inputreads,
           for ( int32_t readn = 1; readn < strs; readn+=2 )
           {
 #ifdef debug_align
-            cout << "readn = " << readn << endl; //TESTING
+            cout << "\nreadn = " << readn << endl; //TESTING
 #endif                   
             // for reverse reads
             if ( !forward_gv )
             {
               // output the first num_alignments_gv alignments
-              //else if ( num_alignments_gv > 0 )
               if ( num_alignments_gv > 0 )
               {
                 // all num_alignments_gv alignments have been output
                 if ( num_alignments_x[readn] < 0 ) continue;
               }
               // the maximum scoring alignment has been found, go to next read
-              else if ( read_max_SW_score[readn] == num_best_hits_gv ) continue;
+              else if ( (min_lis_gv > 0) && (read_max_SW_score[readn] == num_best_hits_gv) ) continue;
             }
                         
             // read on integer alphabet {0,1,2,3}
@@ -2733,7 +2732,7 @@ paralleltraversal ( char* inputreads,
                   // continue analysis of read
                   if ( readhit >= seed_hits_gv )
                   {
-                    // map<seq, <number of 0-errors, number of 1-errors> > most_frequent_seq_bound (for pass_n == 0)
+                    // map<seq, number of 0-error hits, number of 1-error hits > most_frequent_seq_bound (for pass_n == 0)
                     map<uint32_t, mypair > most_frequent_seq_bound;
                     map<uint32_t, mypair >::iterator map_it_bound;
 
@@ -2746,24 +2745,15 @@ paralleltraversal ( char* inputreads,
                     uint32_t max_occur = 0;
                     // minimum # of errors in the sum of all seed hits
                     int32_t minimized_errors = 0;
-                                        
+
                     // STEP 2: for every reference sequence, compute the number of
                     // window hits belonging to it
                     for ( uint32_t i = 0; i < id_win_hits.size(); i++ )
                     {
                       uint32_t _id = id_win_hits[i].id;
-                                                                                        
+
                       // number of entries in the positions table for this id
                       int32_t num_hits = positions_tbl[_id].size;
-
-                      // tmp
-                      /*
-                      cout << "\n";
-                      if ( pass_n == 0 )
-                      {
-                        cout << i << "\t_id = " << _id << "\tnum_hits = " << num_hits << endl;
-                      }
-                      */
 
                       // increment # 0-error or # 1-error hits for which positions
                       // were not stored (number of occurrences exceeded threshold)
@@ -2778,40 +2768,48 @@ paralleltraversal ( char* inputreads,
                
                       // pointer to the seq_pos array in the positions table for this id
                       seq_pos* seq_pos_ptr = positions_tbl[_id].arr;
-                                            
+		      // increment number of 0-error or 1-error hits based on the assumption
+		      // that each hit (k-mer) occurs once on the reference sequence, use
+		      // num_seqs_seen set to guarantee that assumption holds true
+		      set<uint32_t> num_seqs_seen;
+                      set<uint32_t>::iterator it_set;
+                    
                       // loop through every position of id
                       for ( int32_t j = 0; j < num_hits; j++ )
                       {
                         uint32_t seq = seq_pos_ptr++->seq;
+			if ( (it_set = num_seqs_seen.find(seq)) == num_seqs_seen.end() )
+			  num_seqs_seen.insert(seq);
+			// sequence and position for this k-mer already exist, do not
+			// increment number of 0-error or 1-error hits again
+			else continue;
 
                         // use error minimizing equation to sort candidate reference sequences
                         if (pass_n == 0)
                         {  
-                          ///cout << "\tseq" << j << "\t" << seq << endl; //tmp
-
                           // sequence already exists in the map, increment it's value
                           if ( (map_it_bound = most_frequent_seq_bound.find(seq)) != most_frequent_seq_bound.end() )
                           {
                             // additional 1-error hit
                             if (kmer_errors[_id]) map_it_bound->second.second++;
-                            // additional 0-error hit
-                            else map_it_bound->second.first++;
+			    // additional 0-error hit
+			    else map_it_bound->second.first++;
                           }
                           // sequence doesn't exist, add it
                           else
                           {
                             // increment number of 1-error hits
                             if (kmer_errors[_id])
-                            { 
-                              mypair tmp (0,1);
-                              most_frequent_seq_bound.insert(pair<uint32_t, mypair >(seq, tmp));
-                            }
-                            // increment number of 0-error hits
-                            else
                             {
-                              mypair tmp (1,0);
+			      mypair tmp (0,1);
                               most_frequent_seq_bound.insert(pair<uint32_t, mypair >(seq, tmp));                           
                             }
+			    // increment number of 0-error hits
+			    else
+			    {
+			      mypair tmp (1,0);
+			      most_frequent_seq_bound.insert(pair<uint32_t, mypair >(seq, tmp));
+			    }
                           }
                         }//~if (pass_n == 0)
                         // use LIS to sort candidate reference sequences
@@ -2841,19 +2839,23 @@ paralleltraversal ( char* inputreads,
                         // number of 1-error hits
                         uint32_t num_1_error_hits = map_it_bound->second.second;
 
-                        ///cout << "seq = " << map_it_bound->first << "\tnum_0_error_hits = " << num_0_error_hits << "\tnum_1_error_hits = " << num_1_error_hits << endl; //tmp
+			/* tmp
+                        char* tt = reference_seq[(2*(int)map_it_bound->first)];
+                        while (*tt != ' ' ) cout << (char)*tt++;
+                        cout << "\tnum_0_error_hits = " << num_0_error_hits << "\tnum_1_error_hits = " << num_1_error_hits << endl;
+			*/
 
                         // total number of hits passes the threshold
                         if ( (num_0_error_hits + num_1_error_hits) >= seed_hits_gv )
                         {
                           int32_t lower_bound_errors = 2*(numwin - num_0_error_hits - num_1_error_hits) + num_1_error_hits;
-                          ///cout << "\nnumwin = " << numwin << endl;
-                          ///cout << "\nlower_bound_errors = " << lower_bound_errors << endl;
-                          //if ( lower_bound_errors < 0 )
-                          //{
-                          //  fprintf(stderr, "  ERROR: lower_bound_errors cannot be negative. (paralleltraversal.cpp)\n");
-                          //  exit(EXIT_FAILURE);
-                          //}
+                          //cout << "\nnumwin = " << numwin << endl;
+                          //cout << "\nlower_bound_errors = " << lower_bound_errors << endl;
+                          if ( lower_bound_errors < 0 )
+                          {
+                            fprintf(stderr, "  ERROR: lower_bound_errors cannot be negative. (paralleltraversal.cpp)\n");
+                            exit(EXIT_FAILURE);
+                          }
                           candidate_refs.push_back(pair<int32_t, uint32_t>(lower_bound_errors, map_it_bound->first));
                         }
                       }
@@ -2862,11 +2864,12 @@ paralleltraversal ( char* inputreads,
                       // sort sequences with the smallest error to the head of the array
                       sort(candidate_refs.begin(), candidate_refs.end(), sort_errors_asc);
 
-                      // tmp
-                      /*cout << "\n\ncandidate_refs.size() = " << candidate_refs.size() << endl;
+                      /* tmp
+                      cout << "\n\ncandidate_refs.size() = " << candidate_refs.size() << endl;
                       for ( int l = 0; l < candidate_refs.size(); l++ )
                       {
-                        cout << "seq = " << candidate_refs[l].second; 
+			char* tt = reference_seq[(2*(int)candidate_refs[l].second)];
+			while (*tt != ' ' ) cout << (char)*tt++;
                         cout << "\tmin_error = " << candidate_refs[l].first;
                         cout << "\t0-errors = " << most_frequent_seq_bound[candidate_refs[l].second].first;
                         cout << "\t0-errors no pos = " << kmers_0_error_no_pos;
@@ -2874,7 +2877,7 @@ paralleltraversal ( char* inputreads,
                         cout << "\t1-error no pos = " << kmers_1_error_no_pos;
                         cout << "\ttotal hits = " << most_frequent_seq_bound[candidate_refs[l].second].first+most_frequent_seq_bound[candidate_refs[l].second].second << endl;
                       }
-                      */
+		      */
                     }
                     // sort sequences based on highest number of hits              
                     else
@@ -2910,22 +2913,31 @@ paralleltraversal ( char* inputreads,
                       // lower bound error
                       if ( pass_n == 0 ) 
                       {
-                        minimized_errors = candidate_refs[k].first;
+                        minimized_errors = max_occur;
                         // number of errors in the sum of all seeds exceeds the
                         // upper bound on number of errors allowed (computed during
                         // the alignment of the read with the reference sequence
                         // having the least number of errors in the sum of all seeds),
-                        // stop further analysis
-                        if ( minimized_errors > upper_bound_errors ) break;
+                        // stop further analysis if num_alignments_gv < 0
+                        if ( (minimized_errors > upper_bound_errors) && (num_alignments_gv < 0) )
+			{
+#ifdef debug_align
+			  cout << "\t\t\t\tminimized_errors = " << minimized_errors << endl;
+			  cout << "\t\t\t\tupper_bound_errors = " << upper_bound_errors << endl;
+			  cout << "\t\t\t\tEXITING.\n";
+#endif
+			  break;
+			}  
                       }
 
                       max_seq = candidate_refs[k].second; 
 #ifdef debug_align
-                      cout << "\t\t\t\tmax_occur = " << max_occur << endl; //TESTING
+                      cout << "\t\t\t\t(min_error if pass == 0) or max_occur = " << max_occur << endl; //TESTING
                       cout << "\t\t\t\tmax_seq = " << max_seq << endl; //TESTING
                       cout << "\t\t\t\tnumseq_part = " << numseq_part << endl; //TESTING
                       cout << "\t\t\t\tindex size for reference_seq = " << (numseq_part<<1) << endl; //TESTING
-                      cout << "\t\t\t\tbest_x[" << readn << "] = " << best_x[readn] << endl; //TESTING
+		      if ( min_lis_gv > 0 )
+			cout << "\t\t\t\tbest_x[" << readn << "] = " << best_x[readn] << endl; //TESTING
 #endif                             
                       // update number of reference sequences remaining to check
                       if ( (min_lis_gv > 0) && aligned && (k > 0) )
@@ -3173,7 +3185,7 @@ paralleltraversal ( char* inputreads,
                               cout << "ref tag: ";
                               tt = reference_seq[(2*(int)max_seq)];
                               while (*tt != '\n' ) cout << (char)*tt++;
-                              cout << endl;
+			      cout << endl;
                               cout << "ref (starting from align_ref_start-head): ";
                               tt = reference_seq[(2*(int)max_seq)+1]+align_ref_start-head;
                               while (*tt != '\n' ) cout << (int)*tt++;
@@ -3574,7 +3586,7 @@ paralleltraversal ( char* inputreads,
                                                                     
                                   // continue to next read (do not need to collect more seeds using another pass)
                                   search = false;
-                                                                    
+                                                                     
                                 }//~pragma omp critical
                                 
                                 // maximum score possible for the read has been reached,
