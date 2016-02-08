@@ -1,6 +1,6 @@
 /**
  * @file load_index.hpp
- * @brief header file for traverse_bursttrie.cpp
+ * @brief header file for load_index.cpp
  * @parblock
  * SortMeRNA - next-generation reads filter for metatranscriptomic or total RNA
  * @copyright 2012-16 Bonsai Bioinformatics Research Group
@@ -70,7 +70,7 @@ void
 load_index_stats(vector< pair<string,string> >& myfiles, /**< vector of (FASTA file, index name) pairs for loading index */
                  char** argv, /**< command line for executing SortMeRNA */
                  int argc, /**< number of arguments in command line for executing SortMeRNA */
-                 bool yes_SQ, /**< boolean for outputting SQ fields in SAM output */
+                 bool yes_SQ, /**< if true, include @SQ tags in SAM output */
                  char* acceptedstrings_sam, /**< pointer to output SAM file */
                  int32_t _match, /**< Smith-Waterman score for a match */
                  int32_t _mismatch, /**< Smith-Waterman score for a mismatch */
